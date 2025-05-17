@@ -1,0 +1,61 @@
+local Players   = game:GetService("Players")
+local Analytics = game:GetService("RbxAnalyticsService")
+
+local LocalPlayer = Players.LocalPlayer
+if not LocalPlayer then
+    return
+end
+
+-- Safely get the HWID (client id), fallback to UserId in Studio
+local function getHWID()
+    local success, clientId = pcall(function()
+        return Analytics:GetClientId()
+    end)
+    if success and clientId and clientId ~= "" then
+        return clientId
+    else
+        -- Studio / failure fallback
+        return tostring(LocalPlayer.UserId)
+    end
+end
+
+-- Build the GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name   = "HWIDCheckGUI"
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size  = UDim2.new(0, 300, 0, 150)
+frame.Position = UDim2.new(0.5, -150, 0.5, -75)
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.Parent = screenGui
+
+local textBox = Instance.new("TextBox")
+textBox.Size            = UDim2.new(0, 280, 0, 50)
+textBox.Position        = UDim2.new(0, 10, 0, 20)
+textBox.PlaceholderText = "Enter your HWID"
+textBox.TextColor3      = Color3.new(1, 1, 1)
+textBox.BackgroundColor3= Color3.fromRGB(30, 30, 30)
+textBox.ClearTextOnFocus = false
+textBox.Parent          = frame
+
+local submitButton = Instance.new("TextButton")
+submitButton.Size            = UDim2.new(0, 280, 0, 50)
+submitButton.Position        = UDim2.new(0, 10, 0, 80)
+submitButton.Text            = "Submit"
+submitButton.TextColor3      = Color3.new(1, 1, 1)
+submitButton.BackgroundColor3= Color3.fromRGB(70, 70, 70)
+submitButton.Parent          = frame
+
+submitButton.MouseButton1Click:Connect(function()
+    local input = textBox.Text:match("^%s*(.-)%s*$")  -- trim
+    if string.lower(input) == string.lower(getHWID()) then
+        submitButton.Text = "Welcome!"
+        wait(3)
+        screenGui:Destroy()
+    else
+        LocalPlayer:Kick("Incorrect HWID!")
+    end
+end)
+
+print("Your HWID is: " .. getHWID())
